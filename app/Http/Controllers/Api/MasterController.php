@@ -31,18 +31,18 @@ class MasterController extends Controller
         ]);
     }
 
-    public function indexList(Request $request)
+    public function indexes(Request $request)
     {
         try {
             $response = $this->client_kibana->request('GET', '/api/index_management/indices');
-            
+
             // Decodificar el cuerpo de la respuesta
             $data = json_decode($response->getBody()->getContents(), true);
 
             $indices = [];
 
             foreach ($data as $key => $value) {
-                if($value["replica"] == 1) {
+                if ($value["replica"] == 1) {
                     array_push($indices, $value);
                 }
             }
@@ -65,21 +65,44 @@ class MasterController extends Controller
         }
     }
 
-    public function documentList(Request $request)
+    public function documents(Request $request)
     {
         try {
-            $index = $request->input('index') ?? 'hojas_vida';
-            $size = $request->input('size') ?? 10; // Default size is 10 documents
+            $index = $request->input('index') ?? 'hojas_vida'; // Default index is hojas_vida
+            $size = $request->input('size') ?? 100; // Default size is 100 documents
+            $columns = $request->input('columns') ?? null; // Default columns is null
 
-            $params = [
-                'index' => $index,
-                'body' => [
-                    'query' => [
-                        'match_all' => new \stdClass()
-                    ],
-                    'size' => $size // Set the size parameter
-                ]
-            ];
+            if ($columns && is_array($columns) && count($columns) > 0) {
+                $willdcars = [];
+                foreach ($columns as $key => $column) {
+                    $willdcars[] = [
+                        'wildcard' => [
+                            $key => $column
+                        ]
+                    ];
+                }
+                $params = [
+                    'index' => $index,
+                    'body' => [
+                        'query' => [
+                            'bool' => [
+                                "must" => $willdcars
+                            ],
+                        ],
+                        'size' => $size, // Set the size parameter
+                    ]
+                ];
+            } else {
+                $params = [
+                    'index' => $index,
+                    'body' => [
+                        'query' => [
+                            'match_all' => new \stdClass()
+                        ],
+                        'size' => $size // Set the size parameter
+                    ]
+                ];
+            }
 
             // Obtener el contenido de todos los documentos en un índice
             $response = $this->client->search($params);
@@ -101,12 +124,12 @@ class MasterController extends Controller
                 // Eliminar la columnas que contienen un @
                 if (strpos($column, '@') === false) {
                     // Header de las columnas las que contienen un *, y las $defaultColumns
-                    if (strpos($column, '*') !== false || in_array($column, $this->defaultColumns)) {
+                    if (strpos($column, '#') !== false || in_array($column, $this->defaultColumns)) {
                         //$value = str_replace(' ', '_', $column);
                         $header = [
                             'header' => true,
                             'value' => $column,
-                            'label' => str_replace('*', '', $column)
+                            'label' => str_replace('#', '', $column)
                         ];
 
                         $headersColumns[] = $header;

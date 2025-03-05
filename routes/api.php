@@ -13,10 +13,11 @@ use Illuminate\Support\Facades\Route;
 | be assigned to the "api" middleware group. Make something great!
 |
 */
+// URL SANDBOX: http://localhost/apisMASTER/1532/stage/
+// URL PRODUCTION: https://api.servicomplementos.com/1532/stage/
 
 Route::prefix('stage')->group(function () {
     //Route::post('login', [App\Http\Controllers\Api\AuthController::class, 'login']);
-
-    Route::get('index_list', [App\Http\Controllers\Api\MasterController::class, 'indexList']);
-    Route::get('documents_list', [App\Http\Controllers\Api\MasterController::class, 'documentList']);
+    Route::get('indexes', [App\Http\Controllers\Api\MasterController::class, 'indexes']);
+    Route::get('documents', [App\Http\Controllers\Api\MasterController::class, 'documents']);
 });
