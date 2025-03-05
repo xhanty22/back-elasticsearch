@@ -43,9 +43,6 @@ COPY --from=spiralscout/roadrunner:2.4.2 /usr/bin/rr /usr/bin/rr
 # Instalar dependencias del proyecto
 RUN composer update --no-dev
 
-# Instalar dependencias de Node.js
-RUN npm update
-
 # Ejecutar comandos de php artisan 
 # RUN php artisan config:cache 
 # RUN php artisan route:cache 
