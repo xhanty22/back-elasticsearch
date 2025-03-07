@@ -19,5 +19,5 @@ use Illuminate\Support\Facades\Route;
 Route::prefix('stage')->group(function () {
     //Route::post('login', [App\Http\Controllers\Api\AuthController::class, 'login']);
     Route::get('indexes', [App\Http\Controllers\Api\MasterController::class, 'indexes']);
-    Route::get('documents', [App\Http\Controllers\Api\MasterController::class, 'documents']);
+    Route::post('documents', [App\Http\Controllers\Api\MasterController::class, 'documents']);
 });
