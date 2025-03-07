@@ -77,7 +77,7 @@ class MasterController extends Controller
                 foreach ($columns as $key => $column) {
                     $willdcars[] = [
                         'wildcard' => [
-                            $key => $column
+                            $key => '*' . trim($column ?? '') . '*'
                         ]
                     ];
                 }
