@@ -75,9 +75,21 @@ class MasterController extends Controller
             if ($columns && is_array($columns) && count($columns) > 0) {
                 $willdcars = [];
                 foreach ($columns as $key => $column) {
+                    $wilcarOne = [];
+
+                    foreach ($column as $key2 => $value) {
+                        // Validar si el valor es un número
+                        if (is_numeric($value)) {
+                            $wilcarOne[] = ['wildcard' => [$key => '*' . $value . '*']];
+                        } else {
+                            $wilcarOne[] = ['match' => [$key => ['query' => $value, 'fuzziness' => 'AUTO']]];
+                        }
+                    }
+
                     $willdcars[] = [
-                        'wildcard' => [
-                            $key => '*' . trim($column ?? '') . '*'
+                        'bool' => [
+                            'should' => $wilcarOne,
+                            'minimum_should_match' => 1
                         ]
                     ];
                 }

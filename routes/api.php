@@ -13,6 +13,7 @@ use Illuminate\Support\Facades\Route;
 | be assigned to the "api" middleware group. Make something great!
 |
 */
+// URL LOCALHOST: http://127.0.0.1:8000/api/stage/
 // URL SANDBOX: http://localhost/apisMASTER/1532/stage/
 // URL PRODUCTION: https://api.servicomplementos.com/1532/stage/
 
