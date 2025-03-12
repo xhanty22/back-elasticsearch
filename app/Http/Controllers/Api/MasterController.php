@@ -70,10 +70,28 @@ class MasterController extends Controller
         try {
             $index = $request->input('index') ?? 'hojas_vida'; // Default index is hojas_vida
             $size = $request->input('size') ?? 100; // Default size is 100 documents
+            $search = $request->input('search'); // Default size is 100 documents
             $columns = $request->input('columns') ?? null; // Default columns is null
 
+            // Campos de búsqueda
+            $searchData = [];
+            $columnsData = [];
+            $allData = [];
+
+            if ($search && is_array($search) && count($search) > 0) {
+                $querySearch = implode(' ', array_map(function($value) {
+                    return '"' . $value . '"';
+                }, $search));
+            
+                $searchData = [
+                    'query_string' => [
+                        'query' => $querySearch,
+                        'default_field' => '*', // Todos los campos
+                    ]
+                ];
+            }
+
             if ($columns && is_array($columns) && count($columns) > 0) {
-                $willdcars = [];
                 foreach ($columns as $key => $column) {
                     $wilcarOne = [];
 
@@ -86,35 +104,46 @@ class MasterController extends Controller
                         }
                     }
 
-                    $willdcars[] = [
+                    $columnsData[] = [
                         'bool' => [
                             'should' => $wilcarOne,
                             'minimum_should_match' => 1
                         ]
                     ];
                 }
-                $params = [
-                    'index' => $index,
-                    'body' => [
-                        'query' => [
-                            'bool' => [
-                                "must" => $willdcars
-                            ],
-                        ],
-                        'size' => $size, // Set the size parameter
-                    ]
-                ];
-            } else {
-                $params = [
-                    'index' => $index,
-                    'body' => [
-                        'query' => [
-                            'match_all' => new \stdClass()
-                        ],
-                        'size' => $size // Set the size parameter
-                    ]
+            }
+
+            if(!$searchData && !$columnsData) {
+                $allData = [
+                    'match_all' => new \stdClass()
                 ];
             }
+
+            $query = [];
+
+            if ($searchData && is_array($searchData) && count($searchData) > 0) {
+                array_push($query, $searchData);
+            }
+
+            if ($columnsData && is_array($columnsData) && count($columnsData) > 0) {
+                $query = array_merge($query, $columnsData);
+            }
+
+            if ($allData && is_array($allData) && count($allData) > 0) {
+                array_push($query, $allData);
+            }
+
+            $params = [
+                'index' => $index,
+                'body' => [
+                    'query' => [
+                        "bool" => [
+                            "must" => $query,
+                        ]
+                    ],
+                    'size' => $size, // Set the size parameter
+                ]
+            ];
 
             // Obtener el contenido de todos los documentos en un índice
             $response = $this->client->search($params);
