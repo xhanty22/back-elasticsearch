@@ -72,17 +72,19 @@ class MasterController extends Controller
             $size = $request->input('size') ?? 100; // Default size is 100 documents
             $search = $request->input('search'); // Default size is 100 documents
             $columns = $request->input('columns') ?? null; // Default columns is null
+            $ranges = $request->input('ranges') ?? null; // Default columns is null
 
             // Campos de búsqueda
             $searchData = [];
             $columnsData = [];
+            $rangesData = [];
             $allData = [];
 
             if ($search && is_array($search) && count($search) > 0) {
-                $querySearch = implode(' ', array_map(function($value) {
+                $querySearch = implode(' ', array_map(function ($value) {
                     return '"' . $value . '"';
                 }, $search));
-            
+
                 $searchData = [
                     'query_string' => [
                         'query' => $querySearch,
@@ -113,13 +115,23 @@ class MasterController extends Controller
                 }
             }
 
-            if(!$searchData && !$columnsData) {
+            if ($ranges && is_array($ranges) && count($ranges) > 0) {
+                $rangeData = [];
+                foreach ($ranges as $key => $range) {
+                    $rangeData[] = ['range' => [$key => ['gte' => $range["min"], 'lte' => $range["max"]]]];
+                }
+
+                $rangesData = $rangeData;
+            }
+
+            if (!$searchData && !$columnsData && !$ranges) {
                 $allData = [
                     'match_all' => new \stdClass()
                 ];
             }
 
             $query = [];
+            $queryRanges = [];
 
             if ($searchData && is_array($searchData) && count($searchData) > 0) {
                 array_push($query, $searchData);
@@ -127,6 +139,10 @@ class MasterController extends Controller
 
             if ($columnsData && is_array($columnsData) && count($columnsData) > 0) {
                 $query = array_merge($query, $columnsData);
+            }
+
+            if ($rangesData && is_array($rangesData) && count($rangesData) > 0) {
+                $queryRanges = array_merge($queryRanges, $rangesData);
             }
 
             if ($allData && is_array($allData) && count($allData) > 0) {
@@ -139,6 +155,7 @@ class MasterController extends Controller
                     'query' => [
                         "bool" => [
                             "must" => $query,
+                            "filter" => $queryRanges
                         ]
                     ],
                     'size' => $size, // Set the size parameter
